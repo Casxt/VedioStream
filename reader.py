@@ -9,7 +9,7 @@ from stream import StreamReader
 class RTMPStream(StreamReader):
 
     def __init__(self, rtmpAddr: str):
-        super().__init__(Queue())
+        super().__init__(Queue(25))
         self.rtmpAddr = rtmpAddr
         self.pipe = None
 
