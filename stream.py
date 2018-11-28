@@ -1,10 +1,9 @@
 import time
-import Queue as Q
 from multiprocessing import Process, Queue
 
 import cv2
 import numpy
-
+import traceback
 
 class Stream(Process):
     """
@@ -36,10 +35,11 @@ class Stream(Process):
             ret, frame = self.video.retrieve()
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             for output in self.outputs:
-                output.stream: Queue
                 try:
                     output.stream.put_nowait(frame)
-                except Q.
+                except:
+                    traceback.print_exc()
+
             usedTime = time.time() - startTime
             sleepTime = 1 / self.fps - usedTime
             time.sleep(sleepTime if sleepTime > 0 else 0)
