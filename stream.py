@@ -1,4 +1,5 @@
 import time
+from queue import Full
 from multiprocessing import Process, Queue
 
 import cv2
@@ -37,6 +38,8 @@ class Stream(Process):
             for output in self.outputs:
                 try:
                     output.stream.put_nowait(frame)
+                except Full:
+                    print(f"{output.__name__} has been full")
                 except:
                     traceback.print_exc()
 
