@@ -50,7 +50,6 @@ class StreamReader(Process):
         super().__init__()
         self.daemon = True
         self.stream = stream
-        self.fps, self.size = None, None
 
     def onStart(self):
         """用于在另一线程初始化"""

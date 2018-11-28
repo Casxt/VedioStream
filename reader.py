@@ -15,15 +15,24 @@ class RTMPStream(StreamReader):
 
     def onStart(self):
         self.pipe = subprocess.Popen(['ffmpeg',
-                                      '-y',  # (optional) overwrite output file if it exists
-                                      # '-loglevel', 'error',
-                                      '-i', '-',  # The input comes from a pipe
+                                      '-hwaccel', 'cuvid',
+                                      '-f', 'rawvideo',
+                                      '-s', '1920x1080',
                                       '-pix_fmt', 'rgb24',
+                                      '-r', '25',
+                                      '-i', '-',  # The input comes from a pipe
                                       '-vcodec', 'h264_nvenc',
                                       '-an',  # Tells FFMPEG not to expect any audio
+                                      '-gpu', '1',
+                                      '-crf', '24',
+                                      '-me_method', 'umh',
+                                      '-me_range', '50',
+                                      '-rc-lookahead', '100',
                                       '-f', 'flv',
-                                      self.rtmpAddr]
+                                      self.rtmpAddr],
+                                     stdin=subprocess.PIPE
                                      )
 
     def process(self, frame: numpy.ndarray):
+        # print(frame.size)
         self.pipe.stdin.write(frame)
