@@ -30,22 +30,22 @@ class Stream(Process):
         self.size = (
             self.video.get(cv2.CAP_PROP_FRAME_WIDTH), self.video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-        while self.video.isOpened() and self.video.grab():
+        while self.video.isOpened():
             startTime = time.time()
+            ret, frame = self.video.read()
+            if ret is True:
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                for output in self.outputs:
+                    try:
+                        output.stream.put_nowait(frame)
+                    except Full:
+                        print(f"{output.__name__} has been full")
+                    except:
+                        traceback.print_exc()
 
-            ret, frame = self.video.retrieve()
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            for output in self.outputs:
-                try:
-                    output.stream.put_nowait(frame)
-                except Full:
-                    print(f"{output.__name__} has been full")
-                except:
-                    traceback.print_exc()
-
-            usedTime = time.time() - startTime
-            sleepTime = 1 / self.fps - usedTime
-            time.sleep(sleepTime if sleepTime > 0 else 0)
+                usedTime = time.time() - startTime
+                sleepTime = 1 / self.fps - usedTime
+                time.sleep(sleepTime if sleepTime > 0 else 0)
 
 
 class StreamReader(Process):

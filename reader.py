@@ -29,28 +29,30 @@ class SaveFile(StreamReader):
         floder = Path(self.filePath, f"{now.year}/{now.month}/{now.day}")
         if not os.path.exists(floder):
             os.makedirs(floder)
-        #if not floder.is_dir():
-        #    floder.mkdir()
         self.pipe = subprocess.Popen(['ffmpeg',
-                                      '-hwaccel', 'cuvid',
+                                      #'-hwaccel', 'cuvid',
                                       '-f', 'rawvideo',
                                       '-s', '1920x1080',
                                       '-pix_fmt', 'rgb24',
                                       '-r', '25',
                                       '-i', '-',  # The input comes from a pipe
-                                      '-vcodec', 'h264_nvenc',
                                       '-an',  # Tells FFMPEG not to expect any audio
+                                      '-vcodec', 'h264_nvenc',
                                       '-gpu', '1',
-                                      '-crf', '24',
-                                      '-me_method', 'umh',
-                                      '-me_range', '50',
-                                      '-rc-lookahead', '100',
+                                      #'-crf', '24',
+                                      #'-me_method', 'umh',
+                                      #'-me_range', '50',
+                                      #'-rc-lookahead', '100',
+                                      #'-f', 'mp4',
                                       str(Path(floder, f"{now.strftime('%Y-%m-%dT%H:%M:%SZ')}.mp4"))],
-                                     stdin=subprocess.PIPE
+                                     stdin=subprocess.PIPE,
+                                     stdout=None,
+                                     stderr=None,
                                      )
 
     def process(self, frame: numpy.ndarray):
         if self.count > self.interval:
+            self.pipe.stdin.close()
             self.onStart()
         self.count += 1
         self.pipe.stdin.write(frame)
@@ -71,8 +73,8 @@ class RTMPStream(StreamReader):
                                       '-pix_fmt', 'rgb24',
                                       '-r', '25',
                                       '-i', '-',  # The input comes from a pipe
-                                      '-vcodec', 'h264_nvenc',
                                       '-an',  # Tells FFMPEG not to expect any audio
+                                      '-vcodec', 'h264_nvenc',
                                       '-gpu', '1',
                                       '-crf', '24',
                                       '-me_method', 'umh',
@@ -80,7 +82,9 @@ class RTMPStream(StreamReader):
                                       '-rc-lookahead', '100',
                                       '-f', 'flv',
                                       self.rtmpAddr],
-                                     stdin=subprocess.PIPE
+                                     stdin=subprocess.PIPE,
+                                     stdout=None,
+                                     stderr=None,
                                      )
 
     def process(self, frame: numpy.ndarray):
