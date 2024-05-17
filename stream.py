@@ -47,6 +47,8 @@ class Stream(Process):
                 sleepTime = 1 / self.fps - usedTime
                 time.sleep(sleepTime if sleepTime > 0 else 0)
 
+        print("Stream Has Been Closed")
+
 
 class StreamReader(Process):
     """

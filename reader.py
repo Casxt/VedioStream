@@ -1,8 +1,10 @@
 import datetime
 import os
+import signal
 import subprocess
 from multiprocessing import Queue
 from pathlib import Path
+from subprocess import Popen
 
 import numpy
 
@@ -19,7 +21,7 @@ class SaveFile(StreamReader):
         """
         super().__init__(Queue(250))
         self.filePath = filePath
-        self.pipe = None
+        self.pipe: Popen = None
         self.interval = interval
         self.count = 0
 
@@ -30,7 +32,7 @@ class SaveFile(StreamReader):
         if not os.path.exists(floder):
             os.makedirs(floder)
         self.pipe = subprocess.Popen(['ffmpeg',
-                                      #'-hwaccel', 'cuvid',
+                                      # '-hwaccel', 'cuvid',
                                       '-f', 'rawvideo',
                                       '-s', '1920x1080',
                                       '-pix_fmt', 'rgb24',
@@ -39,11 +41,11 @@ class SaveFile(StreamReader):
                                       '-an',  # Tells FFMPEG not to expect any audio
                                       '-vcodec', 'h264_nvenc',
                                       '-gpu', '1',
-                                      #'-crf', '24',
-                                      #'-me_method', 'umh',
-                                      #'-me_range', '50',
-                                      #'-rc-lookahead', '100',
-                                      #'-f', 'mp4',
+                                      # '-crf', '24',
+                                      # '-me_method', 'umh',
+                                      # '-me_range', '50',
+                                      # '-rc-lookahead', '100',
+                                      # '-f', 'mp4',
                                       str(Path(floder, f"{now.strftime('%Y-%m-%dT%H:%M:%SZ')}.mp4"))],
                                      stdin=subprocess.PIPE,
                                      stdout=None,
@@ -52,7 +54,14 @@ class SaveFile(StreamReader):
 
     def process(self, frame: numpy.ndarray):
         if self.count > self.interval:
-            self.pipe.stdin.close()
+            try:
+                #self.pipe.stdout.close()
+                self.pipe.stdin.close()
+                #self.pipe.stderr.close()
+                self.pipe.terminate()
+                os.killpg(self.pipe.pid, signal.SIGKILL)
+            except OSError as e:
+                print(e)
             self.onStart()
         self.count += 1
         self.pipe.stdin.write(frame)
